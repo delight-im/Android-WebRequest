@@ -33,7 +33,7 @@ Instead of `get()`, use either `post()`, `put()` or `delete()`.
 
 Example: `auth("my_username", "my_password")`
 
-### Changint the User-Agent header
+### Changing the User-Agent header
 
 Example: `asUserAgent("MyClient / 1.0")`
 
