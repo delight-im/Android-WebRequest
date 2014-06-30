@@ -10,6 +10,8 @@ Fluent interface for easy HTTP(S) GET/POST/PUT/DELETE requests to web servers
 
 ## Usage
 
+### Asynchronously (with callbacks)
+
 ```
 new WebRequest().get().to("http://www.example.com/page.html").executeAsync(new WebRequest.Callback() {
 	public void onSuccess(String responseText) {
@@ -19,6 +21,12 @@ new WebRequest().get().to("http://www.example.com/page.html").executeAsync(new W
 		// do something
 	}
 });
+```
+
+### Synchronously (with return value)
+```
+String response = new WebRequest().get().to("http://www.example.com/page.html").executeSync();
+// do something
 ```
 
 ## Configuration
@@ -44,6 +52,10 @@ Example: `withTimeout(4000, 6000)`
 ### Changing the charset
 
 Example: `withCharset("iso-8859-1")`
+
+### Requesting a GZIP-compressed response
+
+Example: `askForGzip(true)`
 
 ### Adding parameters
 
