@@ -55,7 +55,7 @@ Example: `withCharset("iso-8859-1")`
 
 ### Requesting a GZIP-compressed response
 
-Example: `askForGzip(true)`
+`askForGzip(true)`
 
 ### Adding parameters
 
