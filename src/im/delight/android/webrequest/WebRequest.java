@@ -292,7 +292,11 @@ public class WebRequest {
 		}
 		
 		final BasicHttpParams httpParameters = new BasicHttpParams();
+		// connections break all the time anyway so disable stale checking and get slightly improved performance
+		HttpConnectionParams.setStaleCheckingEnabled(httpParameters, false);
+		// use the consumer-supplied connection timeout (or the default)
 		HttpConnectionParams.setConnectionTimeout(httpParameters, mConnectionTimeout);
+		// use the consumer-supplied socket timeout (or the default)
 		HttpConnectionParams.setSoTimeout(httpParameters, mSocketTimeout);
 
 		mClient = new DefaultHttpClient(httpParameters);
