@@ -16,6 +16,13 @@ package im.delight.android.webrequest;
  * limitations under the License.
  */
 
+import org.apache.http.util.CharArrayBuffer;
+import java.io.Reader;
+import java.io.InputStreamReader;
+import org.apache.http.HttpEntity;
+import java.util.zip.GZIPInputStream;
+import java.io.InputStream;
+import org.apache.http.Header;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,8 +47,6 @@ public class WebRequest {
 	protected static final int METHOD_POST = 2;
 	protected static final int METHOD_PUT = 3;
 	protected static final int METHOD_DELETE = 4;
-	protected static final String HTTP_HEADER_USER_AGENT = "User-Agent";
-	protected static final String HTTP_HEADER_AUTHORIZATION = "Authorization";
 	protected static final String DEFAULT_USER_AGENT = "Android";
 	protected static final int DEFAULT_CONNECTION_TIMEOUT = 6000;
 	protected static final int DEFAULT_SOCKET_TIMEOUT = 8000;
@@ -55,6 +60,7 @@ public class WebRequest {
 	protected List<NameValuePair> mParams;
 	protected String mUsername;
 	protected String mPassword;
+	protected boolean mGzip;
 	protected DefaultHttpClient mClient;
 	protected HttpRequestBase mHttpRequest;
 	
@@ -73,6 +79,7 @@ public class WebRequest {
 		mParams = new ArrayList<NameValuePair>();
 		mUsername = null;
 		mPassword = null;
+		mGzip = false;
 	}
 	
 	/**
@@ -178,6 +185,16 @@ public class WebRequest {
 			mCharset = charset;
 			return this;
 		}
+	}
+	
+	/**
+	 * Whether to ask for GZIP response compression or not
+	 * @param gzip whether to ask for GZIP or not
+	 * @return this instance for chaining
+	 */
+	public WebRequest askForGzip(boolean gzip) {
+		mGzip = gzip;
+		return this;
 	}
 	
 	/**
@@ -301,9 +318,12 @@ public class WebRequest {
 		}
 
 		addCustomHTTPHeaders(mHttpRequest);
-		mHttpRequest.setHeader(HTTP_HEADER_USER_AGENT, mUserAgent);
+		mHttpRequest.setHeader("User-Agent", mUserAgent);
 		if (mUsername != null && mPassword != null) {
-			mHttpRequest.setHeader(HTTP_HEADER_AUTHORIZATION, getAuthDigest());
+			mHttpRequest.setHeader("Authorization", getAuthDigest());
+		}
+		if (mGzip) {
+			mHttpRequest.addHeader("Accept-Encoding", "gzip");
 		}
 	}
 	
@@ -316,7 +336,7 @@ public class WebRequest {
 				String responseStr;
 				try {
 					final HttpResponse responseData = mClient.execute(mHttpRequest);
-					responseStr = EntityUtils.toString(responseData.getEntity(), mCharset);
+					responseStr = parseResponse(responseData);
 					if (responseStr == null) {
 						if (callback != null) {
 							callback.onError();
@@ -345,7 +365,7 @@ public class WebRequest {
 		String responseStr;
 		try {
 			final HttpResponse responseData = mClient.execute(mHttpRequest);
-			responseStr = EntityUtils.toString(responseData.getEntity(), mCharset);
+			responseStr = parseResponse(responseData);
 			if (responseStr == null) {
 				return null;
 			}
@@ -355,6 +375,54 @@ public class WebRequest {
 		}
 		catch (Exception e) {
 			return null;
+		}
+	}
+	
+	protected String parseResponse(HttpResponse response) throws Exception {
+		final Header contentEncoding = response.getFirstHeader("Content-Encoding");
+		// if we have a compressed response (GZIP)
+		if (contentEncoding != null && contentEncoding.getValue() != null && contentEncoding.getValue().equalsIgnoreCase("gzip")) {
+			// get the entity and the content length (if any) from the response
+			final HttpEntity entity = response.getEntity();
+			long contentLength = entity.getContentLength();
+			
+			// handle too large or undefined content lengths
+			if (contentLength > Integer.MAX_VALUE) {
+				throw new Exception("Response too large");
+			}
+			else if (contentLength < 0) {
+				// use an arbitrary buffer size
+				contentLength = 4096;
+			}
+
+			// construct a GZIP input stream from the response
+			InputStream responseStream = entity.getContent();
+			if (responseStream == null) {
+				return null;
+			}
+			responseStream = new GZIPInputStream(responseStream);
+			
+			// read from the stream
+			Reader reader = new InputStreamReader(responseStream, mCharset);
+			CharArrayBuffer buffer = new CharArrayBuffer((int) contentLength);
+			try {
+				char[] tmp = new char[1024];
+				int l;
+				while ((l = reader.read(tmp)) != -1) {
+					buffer.append(tmp, 0, l);
+				}
+			}
+			finally {
+				reader.close();
+			}
+
+			// return the decompressed response text as a string
+			return buffer.toString();
+		}
+		// if we have an uncompressed response
+		else {
+			// return the response text as a string
+			return EntityUtils.toString(response.getEntity(), mCharset);
 		}
 	}
 	
@@ -393,6 +461,8 @@ public class WebRequest {
 		builder.append(mUsername);
 		builder.append(", mPassword=");
 		builder.append(mPassword);
+		builder.append(", mGzip=");
+		builder.append(mGzip);
 		builder.append("]");
 		return builder.toString();
 	}
