@@ -4,6 +4,8 @@ Fluent interface for easy HTTP(S) `GET`, `POST`, `PUT` and `DELETE` requests to 
 
 ## Installation
 
+ * Include one of the [JARs](JARs) in your `libs` folder
+ * or
  * Copy the Java package to your project's source folder
  * or
  * Create a new library project from this repository and reference it in your project
