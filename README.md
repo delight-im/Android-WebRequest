@@ -1,6 +1,6 @@
 # Android-WebRequest
 
-Fluent interface for easy HTTP(S) `GET`, `POST`, `PUT` and `DELETE` requests to web servers
+Fluent interface for easy HTTP requests to web servers (`GET`, `POST`, `PUT` or `DELETE`)
 
 ## Installation
 
