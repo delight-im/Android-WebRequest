@@ -2,13 +2,13 @@ package im.delight.android.webrequest;
 
 /**
  * Copyright 2014 www.delight.im <info@delight.im>
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -42,7 +42,7 @@ import android.util.Base64;
 
 /** Fluent interface for easy HTTP(S) GET/POST/PUT/DELETE requests to web servers */
 public class WebRequest {
-	
+
 	protected static final int METHOD_GET = 1;
 	protected static final int METHOD_POST = 2;
 	protected static final int METHOD_PUT = 3;
@@ -63,7 +63,7 @@ public class WebRequest {
 	protected boolean mGzip;
 	protected DefaultHttpClient mClient;
 	protected HttpRequestBase mHttpRequest;
-	
+
 	public interface Callback {
 		public void onSuccess(String responseText);
 		public void onError();
@@ -81,7 +81,7 @@ public class WebRequest {
 		mPassword = null;
 		mGzip = false;
 	}
-	
+
 	/**
 	 * Make this request a GET request so that you can call to(...)
 	 * @return this instance for chaining
@@ -90,7 +90,7 @@ public class WebRequest {
 		mRequestMethod = METHOD_GET;
 		return this;
 	}
-	
+
 	/**
 	 * Make this request a POST request so that you can call to(...)
 	 * @return this instance for chaining
@@ -99,7 +99,7 @@ public class WebRequest {
 		mRequestMethod = METHOD_POST;
 		return this;
 	}
-	
+
 	/**
 	 * Make this request a PUT request so that you can call to(...)
 	 * @return this instance for chaining
@@ -108,7 +108,7 @@ public class WebRequest {
 		mRequestMethod = METHOD_PUT;
 		return this;
 	}
-	
+
 	/**
 	 * Make this request a DELETE request so that you can call to(...)
 	 * @return this instance for chaining
@@ -117,7 +117,7 @@ public class WebRequest {
 		mRequestMethod = METHOD_DELETE;
 		return this;
 	}
-	
+
 	/**
 	 * Sets the URL for this web request
 	 * @param url the URL to send the request to
@@ -132,7 +132,7 @@ public class WebRequest {
 			return this;
 		}
 	}
-	
+
 	/**
 	 * Sets the username and password for HTTP Basic Auth
 	 * @param username the username to authenticate as
@@ -144,11 +144,11 @@ public class WebRequest {
 		mPassword = password;
 		return this;
 	}
-	
+
 	/**
 	 * Sets the User-Agent header for the current request
 	 * @param userAgent User-Agent header to send
-	 * @param this instance for chaining
+	 * @return this instance for chaining
 	 */
 	public WebRequest asUserAgent(String userAgent) {
 		if (userAgent == null) {
@@ -159,7 +159,7 @@ public class WebRequest {
 			return this;
 		}
 	}
-	
+
 	/**
 	 * Sets the connection timeout and socket timeout for the current request in milliseconds
 	 * @param connectionTimeout timeout in milliseconds
@@ -171,7 +171,7 @@ public class WebRequest {
 		mSocketTimeout = socketTimeout;
 		return this;
 	}
-	
+
 	/**
 	 * Sets the charset for the current request
 	 * @param charset the character encoding to use for the current request
@@ -186,7 +186,7 @@ public class WebRequest {
 			return this;
 		}
 	}
-	
+
 	/**
 	 * Whether to ask for GZIP response compression or not
 	 * @param gzip whether to ask for GZIP or not
@@ -196,7 +196,7 @@ public class WebRequest {
 		mGzip = gzip;
 		return this;
 	}
-	
+
 	/**
 	 * Adds a new key-value pair to the parameters of this request
 	 * @param key the key of this pair
@@ -212,7 +212,7 @@ public class WebRequest {
 			return this;
 		}
 	}
-	
+
 	/**
 	 * Adds a new key-value pair to the parameters of this request
 	 * @param key the key of this pair
@@ -228,7 +228,7 @@ public class WebRequest {
 			return this;
 		}
 	}
-	
+
 	/**
 	 * Adds a new key-value pair to the parameters of this request
 	 * @param key the key of this pair
@@ -244,7 +244,7 @@ public class WebRequest {
 			return this;
 		}
 	}
-	
+
 	/**
 	 * Adds a new key-value pair to the parameters of this request
 	 * @param key the key of this pair
@@ -260,7 +260,7 @@ public class WebRequest {
 			return this;
 		}
 	}
-	
+
 	/**
 	 * Adds a new key-value pair to the parameters of this request
 	 * @param key the key of this pair
@@ -276,11 +276,13 @@ public class WebRequest {
 			return this;
 		}
 	}
-	
+
 	/**
 	 * Method to be overwritten in subclasses if you want to add custom HTTP headers
+	 *
 	 * @param request the request object to add the HTTP headers to
 	 */
+	@SuppressWarnings("unused")
 	protected void addCustomHTTPHeaders(HttpRequestBase request) { }
 
 	protected void prepare() {
@@ -290,7 +292,7 @@ public class WebRequest {
 		else if (mUrl == null || mUrl.length() < 1) {
 			throw new RuntimeException("You must provide a valid target URL before executing the request");
 		}
-		
+
 		final BasicHttpParams httpParameters = new BasicHttpParams();
 		// connections break all the time anyway so disable stale checking and get slightly improved performance
 		HttpConnectionParams.setStaleCheckingEnabled(httpParameters, false);
@@ -330,12 +332,18 @@ public class WebRequest {
 			mHttpRequest.addHeader("Accept-Encoding", "gzip");
 		}
 	}
-	
-	/** Runs the current request asynchronously and executes the given callback afterwards */
+
+	/**
+	 * Runs the current request asynchronously and executes the given callback afterwards
+	 *
+	 * @param callback the callback to execute when the request succeeds or fails
+	 */
 	public void executeAsync(final Callback callback) {
 		prepare();
 
 		new Thread() {
+
+			@Override
 			public void run() {
 				String responseStr;
 				try {
@@ -359,10 +367,15 @@ public class WebRequest {
 					return;
 				}
 			}
+
 		}.start();
 	}
-	
-	/** Runs the current request asynchronously and executes the given callback afterwards */
+
+	/**
+	 * Runs the current request synchronously and returns the response text
+	 *
+	 * @return the response text as a string
+	 */
 	public String executeSync() {
 		prepare();
 
@@ -381,7 +394,7 @@ public class WebRequest {
 			return null;
 		}
 	}
-	
+
 	protected String parseResponse(HttpResponse response) throws Exception {
 		final Header contentEncoding = response.getFirstHeader("Content-Encoding");
 		// if we have a compressed response (GZIP)
@@ -389,7 +402,7 @@ public class WebRequest {
 			// get the entity and the content length (if any) from the response
 			final HttpEntity entity = response.getEntity();
 			long contentLength = entity.getContentLength();
-			
+
 			// handle too large or undefined content lengths
 			if (contentLength > Integer.MAX_VALUE) {
 				throw new Exception("Response too large");
@@ -405,7 +418,7 @@ public class WebRequest {
 				return null;
 			}
 			responseStream = new GZIPInputStream(responseStream);
-			
+
 			// read from the stream
 			Reader reader = new InputStreamReader(responseStream, mCharset);
 			CharArrayBuffer buffer = new CharArrayBuffer((int) contentLength);
@@ -429,12 +442,12 @@ public class WebRequest {
 			return EntityUtils.toString(response.getEntity(), mCharset);
 		}
 	}
-	
+
 	/** Builds the HTTP query string from the list of parameters (analogous to PHP's http_build_query(...) function) */
 	protected static String httpBuildQuery(List<? extends NameValuePair> parameters, String encoding) {
 		return URLEncodedUtils.format(parameters, encoding).replace("*", "%2A");
 	}
-	
+
 	protected String getAuthDigest() {
 		if (mUsername != null && mPassword != null) {
 			return "Basic "+Base64.encodeToString((mUsername+":"+mPassword).getBytes(), Base64.NO_WRAP);
